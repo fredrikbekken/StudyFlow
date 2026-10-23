@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StudyFlow – Your Personal Study Planner</title>
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f1f3ff; --surface:#ffffff; --text:#25244a; --muted:#6b6a8f; --line:#e1e3f5;
+  --blue:#5b8def; --purple:#8b6cf0; --soft:#eceeff;
+  --red:#d93f5a; --red-bg:#fde8ec; --orange:#d9731a; --orange-bg:#fff0de;
+  --green:#2f9e6e; --green-bg:#e2f6ec;
+  --shadow:0 6px 24px rgba(91,100,200,.12);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15142b; --surface:#1f1e3a; --text:#ecebff; --muted:#a3a2c9; --line:#33325a;
+    --soft:#2a2950; --red:#ff7b92; --red-bg:#4a2030; --orange:#ffb066; --orange-bg:#4a3420;
+    --green:#5fd6a0; --green-bg:#1d3d33; --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15142b; --surface:#1f1e3a; --text:#ecebff; --muted:#a3a2c9; --line:#33325a;
+  --soft:#2a2950; --red:#ff7b92; --red-bg:#4a2030; --orange:#ffb066; --orange-bg:#4a3420;
+  --green:#5fd6a0; --green-bg:#1d3d33; --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Nunito","Segoe UI",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:820px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+h1{margin:0;font-size:1.7rem;letter-spacing:-.02em}
+h1 span{background:linear-gradient(90deg,var(--blue),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:2px 0 0;color:var(--muted);font-size:.95rem}
+.card{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
+h2{margin:0 0 14px;font-size:1.1rem}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--soft);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.6rem}
+.stat small{color:var(--muted)}
+.bar{height:14px;background:var(--soft);border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:99px;transition:width .4s}
+.pct{display:flex;justify-content:space-between;margin-bottom:6px;font-weight:700}
+form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;font-weight:700;color:var(--muted)}
+.full{grid-column:1/-1}
+input,select{font:inherit;color:var(--text);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px;width:100%}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--blue);outline-offset:1px}
+.primary{font:inherit;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--blue),var(--purple));border:0;border-radius:12px;padding:12px;cursor:pointer}
+.primary:hover{filter:brightness(1.07)}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{font:inherit;font-size:.85rem;font-weight:700;color:var(--muted);background:var(--soft);border:0;border-radius:99px;padding:6px 14px;cursor:pointer}
+.chip.on{color:#fff;background:var(--purple)}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+li.task{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--bg);border-left:6px solid var(--blue)}
+li.task.overdue{border-color:var(--red);background:var(--red-bg)}
+li.task.soon{border-color:var(--orange);background:var(--orange-bg)}
+li.task.done{border-color:var(--green);opacity:.7}
+li.task.done .title{text-decoration:line-through}
+li.task input[type=checkbox]{width:22px;height:22px;accent-color:var(--purple);flex:none}
+.info{flex:1;min-width:0}
+.title{font-weight:700;overflow-wrap:anywhere}
+.meta{font-size:.82rem;color:var(--muted)}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;border-radius:99px;padding:2px 9px;margin-left:4px;background:var(--soft);color:var(--muted)}
+.badge.high{background:var(--red-bg);color:var(--red)}
+.badge.medium{background:var(--orange-bg);color:var(--orange)}
+.badge.low{background:var(--green-bg);color:var(--green)}
+.due{font-weight:700}
+.overdue .due{color:var(--red)} .soon .due{color:var(--orange)}
+.del{font:inherit;border:0;background:transparent;color:var(--muted);font-size:1.2rem;cursor:pointer;border-radius:8px;padding:4px 8px}
+.del:hover{color:var(--red);background:var(--red-bg)}
+.empty{text-align:center;color:var(--muted);padding:20px}
+.theme{font:inherit;border:0;background:var(--surface);color:var(--text);border-radius:99px;padding:8px 14px;box-shadow:var(--shadow);cursor:pointer}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:14px;max-width:calc(100% - 32px);background:var(--text);color:var(--bg);border-radius:12px;padding:10px 16px;box-shadow:var(--shadow);z-index:20}
+.toast[hidden]{display:none}
+.toast span{overflow-wrap:anywhere}
+.toast button{font:inherit;font-weight:700;border:0;background:transparent;color:var(--blue);cursor:pointer;padding:2px 6px}
+@media(max-width:520px){form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span>StudyFlow</span></h1>
+      <p class="sub">Your personal study planner</p>
+    </div>
+    <button class="theme" id="themeBtn" type="button">Dark mode</button>
+  </header>
+
+  <section class="card" aria-label="Progress dashboard">
+    <h2>Your progress</h2>
+    <div class="stats">
+      <div class="stat"><b id="total">0</b><small>Total</small></div>
+      <div class="stat"><b id="done">0</b><small>Completed</small></div>
+      <div class="stat"><b id="late">0</b><small>Overdue</small></div>
+    </div>
+    <div class="pct"><span>Completion</span><span id="pct">0%</span></div>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar"><div class="fill" id="fill"></div></div>
+  </section>
+
+  <section class="card" aria-label="Add assignment">
+    <h2>Add an assignment</h2>
+    <form id="form">
+      <label class="full">Title<input id="fTitle" required maxlength="80" placeholder="e.g. Neural networks essay"></label>
+      <label>Course<input id="fCourse" required maxlength="40" placeholder="e.g. Intro to AI"></label>
+      <label>Deadline<input id="fDate" type="date" required></label>
+      <label>Priority
+        <select id="fPrio"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select>
+      </label>
+      <button class="primary" type="submit" style="align-self:end">Add assignment</button>
+    </form>
+  </section>
+
+  <section class="card" aria-label="Assignments">
+    <h2>Assignments &amp; deadlines</h2>
+    <div class="tools" id="filters"></div>
+    <ul id="list"></ul>
+  </section>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<script>
+(function(){
+  var KEY="studyflow.tasks.v1", THEME="studyflow.theme";
+  var tasks=[], filter="all";
+
+  function load(){
+    try{var r=localStorage.getItem(KEY);tasks=r?JSON.parse(r):[];if(!Array.isArray(tasks))tasks=[];}catch(e){tasks=[];}
+  }
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(tasks));}catch(e){}}
+
+  function today(){var d=new Date();d.setHours(0,0,0,0);return d;}
+  function parse(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+  function daysLeft(s){return Math.round((parse(s)-today())/86400000);}
+  function status(t){
+    if(t.done)return "done";
+    var d=daysLeft(t.date);
+    if(d<0)return "overdue";
+    if(d<=2)return "soon";
+    return "ok";
+  }
+  function dueText(t){
+    var d=daysLeft(t.date), f=parse(t.date).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+    if(t.done)return f;
+    if(d<0)return f+" – overdue by "+(-d)+(d===-1?" day":" days");
+    if(d===0)return f+" – due today";
+    if(d===1)return f+" – due tomorrow";
+    return f+" – "+d+" days left";
+  }
+  function esc(s){return s.replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+
+  var undoTimer=null;
+  function removeTask(id){
+    var idx=-1;
+    for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){idx=i;break;}}
+    if(idx<0)return;
+    var removed=tasks.splice(idx,1)[0];
+    save();render();
+    showToast("Deleted “"+removed.title+"”",function(){
+      tasks.splice(Math.min(idx,tasks.length),0,removed);save();render();
+    });
+  }
+  function showToast(msg,undo){
+    var box=document.getElementById("toast");box.innerHTML="";
+    var s=document.createElement("span");s.textContent=msg;
+    var b=document.createElement("button");b.type="button";b.textContent="Undo";
+    b.onclick=function(){undo();box.hidden=true;};
+    box.appendChild(s);box.appendChild(b);box.hidden=false;
+    clearTimeout(undoTimer);undoTimer=setTimeout(function(){box.hidden=true;},5000);
+  }
+
+  var filters=[["all","All"],["active","Active"],["overdue","Overdue"],["completed","Completed"]];
+  function renderFilters(){
+    var box=document.getElementById("filters");box.innerHTML="";
+    filters.forEach(function(f){
+      var b=document.createElement("button");b.type="button";b.className="chip"+(filter===f[0]?" on":"");b.textContent=f[1];
+      b.onclick=function(){filter=f[0];render();};box.appendChild(b);
+    });
+  }
+
+  function render(){
+    renderFilters();
+    var total=tasks.length, done=tasks.filter(function(t){return t.done;}).length;
+    var late=tasks.filter(function(t){return status(t)==="overdue";}).length;
+    var pct=total?Math.round(done/total*100):0;
+    document.getElementById("total").textContent=total;
+    document.getElementById("done").textContent=done;
+    document.getElementById("late").textContent=late;
+    document.getElementById("pct").textContent=pct+"%";
+    document.getElementById("fill").style.width=pct+"%";
+    document.getElementById("bar").setAttribute("aria-valuenow",pct);
+
+    var prioOrder={high:0,medium:1,low:2};
+    var shown=tasks.filter(function(t){
+      if(filter==="active")return !t.done;
+      if(filter==="completed")return t.done;
+      if(filter==="overdue")return status(t)==="overdue";
+      return true;
+    }).sort(function(a,b){
+      if(a.done!==b.done)return a.done?1:-1;
+      if(a.date!==b.date)return a.date<b.date?-1:1;
+      return prioOrder[a.prio]-prioOrder[b.prio];
+    });
+
+    var ul=document.getElementById("list");ul.innerHTML="";
+    if(!shown.length){
+      var li=document.createElement("li");li.className="empty";
+      li.textContent=total?"Nothing here for this filter.":"No assignments yet. Add your first one above.";
+      ul.appendChild(li);return;
+    }
+    shown.forEach(function(t){
+      var li=document.createElement("li");li.className="task "+(status(t)==="ok"?"":status(t));
+      li.innerHTML='<input type="checkbox" aria-label="Mark completed"'+(t.done?" checked":"")+'>'+
+        '<div class="info"><div class="title">'+esc(t.title)+'</div>'+
+        '<div class="meta">'+esc(t.course)+' · <span class="due">'+dueText(t)+'</span>'+
+        '<span class="badge '+t.prio+'">'+t.prio+'</span></div></div>'+
+        '<button class="del" type="button" aria-label="Delete assignment">✕</button>';
+      li.querySelector("input").onchange=function(){t.done=!t.done;save();render();};
+      li.querySelector(".del").onclick=function(){removeTask(t.id);};
+      ul.appendChild(li);
+    });
+  }
+
+  document.getElementById("form").addEventListener("submit",function(e){
+    e.preventDefault();
+    var title=document.getElementById("fTitle").value.trim(), course=document.getElementById("fCourse").value.trim();
+    var date=document.getElementById("fDate").value, prio=document.getElementById("fPrio").value;
+    if(!title||!course||!date)return;
+    tasks.push({id:Date.now()+"-"+Math.random().toString(36).slice(2,6),title:title,course:course,date:date,prio:prio,done:false});
+    save();this.reset();document.getElementById("fPrio").value="medium";render();
+  });
+
+  var btn=document.getElementById("themeBtn");
+  function applyTheme(t){document.documentElement.setAttribute("data-theme",t);btn.textContent=t==="dark"?"Light mode":"Dark mode";}
+  var saved=null;try{saved=localStorage.getItem(THEME);}catch(e){}
+  applyTheme(saved||(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));
+  btn.onclick=function(){
+    var n=document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark";
+    applyTheme(n);try{localStorage.setItem(THEME,n);}catch(e){}
+  };
+
+  load();render();
+})();
+</script>
+</body>
+</html>
